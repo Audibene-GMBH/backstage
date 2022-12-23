@@ -162,11 +162,7 @@ describe('fetch:cookiecutter', () => {
         integrations,
         baseUrl: mockContext.templateInfo?.baseUrl,
         fetchUrl: mockContext.input.url,
-        outputPath: join(
-          mockTmpDir,
-          'template',
-          "{{cookiecutter and 'contents'}}",
-        ),
+        outputPath: join(mockTmpDir, 'template'),
       }),
     );
   });

@@ -207,10 +207,6 @@ export function createFetchCookiecutterAction(options: {
       ctx.logger.info('Fetching and then templating using cookiecutter');
       const workDir = await ctx.createTemporaryDirectory();
       const templateDir = resolvePath(workDir, 'template');
-      const templateContentsDir = resolvePath(
-        templateDir,
-        "{{cookiecutter and 'contents'}}",
-      );
       const resultDir = resolvePath(workDir, 'result');
 
       if (
@@ -230,7 +226,7 @@ export function createFetchCookiecutterAction(options: {
         integrations,
         baseUrl: ctx.templateInfo?.baseUrl,
         fetchUrl: ctx.input.url,
-        outputPath: templateContentsDir,
+        outputPath: templateDir,
       });
 
       const cookiecutter = new CookiecutterRunner({ containerRunner });
@@ -247,7 +243,7 @@ export function createFetchCookiecutterAction(options: {
         values: values,
         imageName: ctx.input.imageName,
         templateDir: templateDir,
-        templateContentsDir: templateContentsDir,
+        templateContentsDir: templateDir,
       });
 
       // Finally move the template result into the task workspace
