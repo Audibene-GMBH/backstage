@@ -194,5 +194,29 @@
     "@backstage/plugin-vault-backend": "0.2.5",
     "@backstage/plugin-xcmetrics": "0.2.32"
   },
-  "changesets": []
+  "changesets": [
+    "bright-pants-cry",
+    "create-app-1671804130",
+    "eight-dragons-accept",
+    "fifty-paws-attack",
+    "fifty-zoos-nail",
+    "fluffy-forks-happen",
+    "forty-years-retire",
+    "funny-pianos-grow",
+    "good-geckos-reflect",
+    "hungry-falcons-cross",
+    "metal-hotels-deliver",
+    "old-planets-care",
+    "olive-eyes-sing",
+    "renovate-968149a",
+    "search-break-loop",
+    "search-mele-kalikimaka",
+    "search-pressure-back",
+    "selfish-phones-smoke",
+    "silver-chicken-travel",
+    "strong-eyes-march",
+    "tasty-impalas-cross",
+    "tasty-impalas-mix",
+    "witty-eels-itch"
+  ]
 }
