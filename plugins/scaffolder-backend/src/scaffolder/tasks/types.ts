@@ -16,6 +16,7 @@
 
 import { JsonValue, JsonObject, Observable } from '@backstage/types';
 import { TaskSpec } from '@backstage/plugin-scaffolder-common';
+import { Span } from '@opentelemetry/api';
 
 /**
  * The status of each step of the Task
@@ -112,6 +113,7 @@ export interface TaskContext {
   createdBy?: string;
   done: boolean;
   isDryRun?: boolean;
+  span: Span | undefined;
   emitLog(message: string, logMetadata?: JsonObject): Promise<void>;
   complete(result: TaskCompletionState, metadata?: JsonObject): Promise<void>;
   getWorkspaceName(): Promise<string>;

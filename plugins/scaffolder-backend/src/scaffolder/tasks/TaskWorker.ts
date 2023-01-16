@@ -25,6 +25,8 @@ import {
   TemplateFilter,
   TemplateGlobal,
 } from '../../lib/templating/SecureTemplater';
+import { trace, context } from '@opentelemetry/api';
+import { getTracer } from '../../opentelemetry';
 
 /**
  * TaskWorkerOptions
@@ -137,14 +139,27 @@ export class TaskWorker {
           `Unsupported Template apiVersion ${task.spec.apiVersion}`,
         );
       }
+      const span = task.span ?? getTracer().startSpan('runOneTask');
 
-      const { output } = await this.options.runners.workflowRunner.execute(
-        task,
+      for (const key of Object.keys(task.spec.parameters)) {
+        const value = task.spec.parameters[key];
+        if (['string', 'int', 'float', 'bool'].includes(typeof value)) {
+          span.setAttribute(key, value as any);
+        }
+      }
+
+      const execute = async () =>
+        await this.options.runners.workflowRunner.execute(task);
+
+      const { output } = await context.with(
+        trace.setSpan(context.active(), span),
+        execute,
       );
 
       await task.complete('completed', { output });
     } catch (error) {
       assertError(error);
+      task.span?.recordException(error);
       await task.complete('failed', {
         error: { name: error.name, message: error.message },
       });

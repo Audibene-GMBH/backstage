@@ -18,6 +18,7 @@ import { TaskSpec } from '@backstage/plugin-scaffolder-common';
 import { JsonObject, Observable } from '@backstage/types';
 import { Logger } from 'winston';
 import ObservableImpl from 'zen-observable';
+import { context, propagation, Span, SpanStatusCode } from '@opentelemetry/api';
 import {
   SerializedTask,
   SerializedTaskEvent,
@@ -28,6 +29,7 @@ import {
   TaskSecrets,
   TaskStore,
 } from './types';
+import { getTracer, templateExecutionFailed } from '../../opentelemetry';
 
 /**
  * TaskManager
@@ -39,8 +41,13 @@ export class TaskManager implements TaskContext {
 
   private heartbeatTimeoutId?: ReturnType<typeof setInterval>;
 
-  static create(task: CurrentClaimedTask, storage: TaskStore, logger: Logger) {
-    const agent = new TaskManager(task, storage, logger);
+  static create(
+    task: CurrentClaimedTask,
+    storage: TaskStore,
+    logger: Logger,
+    span: Span | undefined,
+  ) {
+    const agent = new TaskManager(task, storage, logger, span);
     agent.startTimeout();
     return agent;
   }
@@ -50,6 +57,7 @@ export class TaskManager implements TaskContext {
     private readonly task: CurrentClaimedTask,
     private readonly storage: TaskStore,
     private readonly logger: Logger,
+    private readonly span: Span | undefined,
   ) {}
 
   get spec() {
@@ -69,6 +77,7 @@ export class TaskManager implements TaskContext {
   }
 
   get done() {
+    this.span?.end();
     return this.isDone;
   }
 
@@ -83,15 +92,27 @@ export class TaskManager implements TaskContext {
     result: TaskCompletionState,
     metadata?: JsonObject,
   ): Promise<void> {
+    const hasFailed = result === 'failed';
+    const message = `Run completed with status: ${result}`;
     await this.storage.completeTask({
       taskId: this.task.taskId,
-      status: result === 'failed' ? 'failed' : 'completed',
+      status: hasFailed ? 'failed' : 'completed',
       eventBody: {
-        message: `Run completed with status: ${result}`,
+        message,
         ...metadata,
       },
     });
     this.isDone = true;
+    if (this.span) {
+      if (hasFailed) {
+        this.span.addEvent(templateExecutionFailed);
+        this.span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message,
+        });
+      }
+      this.span.end();
+    }
     if (this.heartbeatTimeoutId) {
       clearTimeout(this.heartbeatTimeoutId);
     }
@@ -172,15 +193,23 @@ export class StorageTaskBroker implements TaskBroker {
     for (;;) {
       const pendingTask = await this.storage.claimTask();
       if (pendingTask) {
+        const activeContext = propagation.extract(
+          context.active(),
+          pendingTask.spec.parameters,
+        );
+        const span = getTracer().startSpan('claim', undefined, activeContext);
+
         return TaskManager.create(
           {
             taskId: pendingTask.id,
             spec: pendingTask.spec,
             secrets: pendingTask.secrets,
             createdBy: pendingTask.createdBy,
+            span,
           },
           this.storage,
           this.logger,
+          span,
         );
       }
 
@@ -194,11 +223,20 @@ export class StorageTaskBroker implements TaskBroker {
   async dispatch(
     options: TaskBrokerDispatchOptions,
   ): Promise<{ taskId: string }> {
-    const taskRow = await this.storage.createTask(options);
-    this.signalDispatch();
-    return {
-      taskId: taskRow.taskId,
-    };
+    return getTracer().startActiveSpan('dispatch', async span => {
+      propagation.inject(context.active(), options.spec.parameters);
+      let taskRow;
+      try {
+        taskRow = await this.storage.createTask(options);
+      } finally {
+        if (taskRow) span.setAttribute('taskId', taskRow.taskId);
+        span.end();
+      }
+      this.signalDispatch();
+      return {
+        taskId: taskRow.taskId,
+      };
+    });
   }
 
   /**
