@@ -13572,11 +13572,11 @@ __metadata:
   linkType: hard
 
 "@types/base64-stream@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "@types/base64-stream@npm:1.0.2"
+  version: 1.0.4
+  resolution: "@types/base64-stream@npm:1.0.4"
   dependencies:
     "@types/node": "*"
-  checksum: 4cba1a7dedfb8bef8517a8c9ba47672835342e075de50e9cd00ea52985cb882afa85170756a6983796326c026f62253bbcf4401a25c5ca461b4783194ace2bb5
+  checksum: 498dc3a71f9e6a598761616749697621c1b70f5ae79d24bb7f1b88a924c9865d82ac910eff5a41912194c4834e93e0b7da075418ebb61356c0d3dc4806e8007e
   languageName: node
   linkType: hard
 
