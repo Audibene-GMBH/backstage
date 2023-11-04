@@ -13660,11 +13660,11 @@ __metadata:
   linkType: hard
 
 "@types/color@npm:^3.0.1":
-  version: 3.0.3
-  resolution: "@types/color@npm:3.0.3"
+  version: 3.0.5
+  resolution: "@types/color@npm:3.0.5"
   dependencies:
     "@types/color-convert": "*"
-  checksum: 4a54a6eca687b1f19d393c6c44e292009e913fa2377b5b815d1cd04470131087d7a799718d9e66a970f43e6ba16e7056a5b40b49d2d0d1d0f1530aff23864528
+  checksum: 82cce7cb132b5c0898dd69b92a4663e34ad8f19db6a009bef7ef79d4840ddb4d5f7e793e2e64e3b4a60da92dc2ae33d1aa498981d0fcf0562917c9550603a99d
   languageName: node
   linkType: hard
 
